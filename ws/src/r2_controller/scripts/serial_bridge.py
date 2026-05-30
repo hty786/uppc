@@ -48,6 +48,7 @@ class SerialBridge(Node):
         self.running = True
         self._reset_detected = False
         self._reset_reason = ''
+        self._odom_offset = None  # 首次收到的里程计作为偏移量减掉，实现归零
 
         # ROS 订阅
         self.sub_odom = self.create_subscription(
@@ -116,12 +117,31 @@ class SerialBridge(Node):
 
     def odom_cb(self, msg: Odometry):
         with self.lock:
-            self.latest_odom.x = msg.pose.pose.position.x
-            self.latest_odom.y = msg.pose.pose.position.y
-            self.latest_odom.z = msg.pose.pose.position.z
+            x = msg.pose.pose.position.x
+            y = msg.pose.pose.position.y
+            z = msg.pose.pose.position.z
             q = msg.pose.pose.orientation
-            self.latest_odom.roll, self.latest_odom.pitch, self.latest_odom.yaw = \
-                self._quat_to_euler(q.x, q.y, q.z, q.w)
+            roll, pitch, yaw = self._quat_to_euler(q.x, q.y, q.z, q.w)
+
+            # 首次收到里程计：记录偏移量，实现位置归零
+            if self._odom_offset is None:
+                self._odom_offset = (x, y, z, yaw)
+                self.get_logger().info(
+                    f'里程计归零点: x={x:.3f} y={y:.3f} z={z:.3f} yaw={yaw:.1f}°')
+
+            ox, oy, oz, oyaw = self._odom_offset
+            self.latest_odom.x = x - ox
+            self.latest_odom.y = y - oy
+            self.latest_odom.z = z - oz
+            # yaw 做角度差值并归一化
+            dyaw = yaw - oyaw
+            while dyaw > 180.0:
+                dyaw -= 360.0
+            while dyaw < -180.0:
+                dyaw += 360.0
+            self.latest_odom.roll = roll
+            self.latest_odom.pitch = pitch
+            self.latest_odom.yaw = dyaw
         now = self.get_clock().now().nanoseconds / 1e9
         if now - getattr(self, '_last_odom_print', 0) > 1.0:
             self._last_odom_print = now
