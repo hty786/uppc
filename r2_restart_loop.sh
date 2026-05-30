@@ -15,6 +15,7 @@ WORKSPACE_SETUP="/home/shijue2/main_R2/uppc/ws/install/setup.bash"
 
 export PATH="/usr/bin:/bin:/usr/local/bin:/opt/ros/humble/bin:$PATH"
 export LD_LIBRARY_PATH=""
+export DISPLAY="${DISPLAY:-:0}"
 
 if [ ! -f "$ROS2_SETUP" ]; then
     echo "ERROR: ROS2 not found at $ROS2_SETUP"

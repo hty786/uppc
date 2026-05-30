@@ -9,8 +9,7 @@ install(PROGRAMS
   scripts/r2_protocol.py
   scripts/forest_planner.py
   scripts/odometry_printer.py
-  scripts/pid_plotter.py
-  scripts/nav_plotter.py
+  scripts/yaw_plotter.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
