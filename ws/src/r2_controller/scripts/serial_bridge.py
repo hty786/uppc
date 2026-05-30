@@ -168,8 +168,8 @@ class SerialBridge(Node):
         # 心跳检测：串口连接正常但 3 秒没收到有效帧 = MCU 复位
         if self._last_frame_time > 0 and self.serial_ok:
             now = self.get_clock().now().nanoseconds / 1e9
-            if now - self._last_frame_time > 3.0:
-                self._mark_reset_detected('MCU heartbeat timeout (no frame for 3s)')
+            if now - self._last_frame_time > 1.0:
+                self._mark_reset_detected('MCU heartbeat timeout (no frame for 1s)')
 
     def _mark_reset_detected(self, reason: str):
         if self._reset_detected:
