@@ -153,7 +153,7 @@ class SerialBridge(Node):
         now = self.get_clock().now().nanoseconds / 1e9
         if now - getattr(self, '_last_odom_print', 0) > 1.0:
             self._last_odom_print = now
-            self.get_logger().info(f'[DBG] odom_cb received: x={msg.pose.pose.position.x:.3f} y={msg.pose.pose.position.y:.3f} z={msg.pose.pose.position.z:.3f}')
+            self.get_logger().info(f'[DBG] odom raw: x={x:.3f} y={y:.3f} yaw={yaw:.1f} | sent: x={self.latest_odom.x:.3f} y={self.latest_odom.y:.3f} yaw={self.latest_odom.yaw:.1f}')
 
     def kfs_cb(self, msg: String):
         pass
