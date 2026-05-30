@@ -1,0 +1,20 @@
+[Unit]
+Description=R2 Robot ROS2 Upper Computer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=shijue2
+Group=shijue2
+WorkingDirectory=/home/shijue2/main_R2/uppc
+ExecStart=/bin/bash /home/shijue2/main_R2/uppc/r2_restart_loop.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+Environment=HOME=/home/shijue2
+Environment=USER=shijue2
+
+[Install]
+WantedBy=multi-user.target

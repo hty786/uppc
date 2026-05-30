@@ -1,0 +1,16 @@
+/d435i/d435i_camera_node:
+  ros__parameters:
+    rgb_camera.color_profile: '640,480,30'
+    depth_module.depth_profile: '640,480,30'
+    depth_module.infra_profile: '640,480,30'
+    pointcloud.stream_filter: '2'
+    pointcloud.stream_index_filter: '0'
+    pointcloud.ordered_pc: false
+    pointcloud.allow_no_texture_points: false
+    clip_distance: -2.0
+    angular_velocity_cov: 0.01
+    linear_accel_cov: 0.01
+    publish_tf: true
+    tf_publish_rate: 0.0
+    base_frame_id: link
+    tf_prefix: ""

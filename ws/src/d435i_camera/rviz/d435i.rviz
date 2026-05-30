@@ -1,0 +1,76 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+  - Class: rviz_common/Time
+    Name: Time
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Plane Cell Count: 10
+      Reference Frame: <Fixed Frame>
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Frame: d435i_link
+      Marker Scale: 0.3
+    - Class: rviz_default_plugins/Image
+      Name: Color
+      Enabled: true
+      Topic:
+        Value: /d435i/d435i/color/image_raw
+    - Class: rviz_default_plugins/Image
+      Name: Depth (Aligned)
+      Enabled: true
+      Topic:
+        Value: /d435i/d435i/aligned_depth_to_color/image_raw
+    - Class: rviz_default_plugins/PointCloud2
+      Name: PointCloud
+      Enabled: true
+      Topic:
+        Value: /d435i/d435i/depth/color/points
+      Style: Flat Squares
+      Size (m): 0.01
+      Color Transformer: RGB8
+      Decay Time: 0
+    - Class: rviz_default_plugins/Image
+      Name: Blue Detection
+      Enabled: true
+      Topic:
+        Value: /d435i/d435i/blue_detection/image
+    - Class: rviz_default_plugins/Marker
+      Name: Blue Marker
+      Enabled: true
+      Topic:
+        Value: /d435i/d435i/blue_detection/marker
+    - Class: rviz_default_plugins/Axes
+      Name: Axes
+      Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: d435i_link
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+    - Class: rviz_default_plugins/SetInitialPose
+    - Class: rviz_default_plugins/SetGoal
+    - Class: rviz_default_plugins/PublishPoint
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 1.5
+      Focal Point: [0, 0, 0]
+      Name: Current View
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz_default_plugins)
