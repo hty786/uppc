@@ -229,10 +229,10 @@ class SerialBridge(Node):
                 try:
                     if self.ser.in_waiting:
                         data = self.ser.read(self.ser.in_waiting)
-                        # 在数据流中扫描 0xAB 信号（不限于第一位）
-                        if 0xAB in data and not self._reset_detected:
-                            self.get_logger().info('收到 MCU 复位信号 0xAB，系统将重启')
-                            self._mark_reset_detected('Received MCU reset signal 0xAB; restarting system')
+                        # 扫描 0xAB 三连信号（STM32 启动后通过 rc_send_power_on_msg 发送）
+                        if b'\xab\xab\xab' in data and not self._reset_detected:
+                            self.get_logger().info('收到 MCU 复位信号 0xABx3，系统将重启')
+                            self._mark_reset_detected('Received MCU reset signal 0xABx3; restarting system')
                             return
                         self.rx_buffer.extend(data)
                         self._parse_rx()
