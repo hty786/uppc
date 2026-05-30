@@ -50,6 +50,7 @@ class SerialBridge(Node):
         self._reset_reason = ''
         self._odom_offset = None  # 首次收到的里程计作为偏移量减掉，实现归零
         self._serial_was_lost = False  # 串口断开过（用于判断 MCU 复位）
+        self._last_frame_time = 0.0     # 最后收到有效帧的时间（心跳检测）
 
         # ROS 订阅
         self.sub_odom = self.create_subscription(
@@ -163,6 +164,12 @@ class SerialBridge(Node):
                 self.get_logger().info(self._reset_reason)
             self.get_logger().info('MCU 复位，正在重启系统...')
             rclpy.shutdown()
+            return
+        # 心跳检测：串口连接正常但 3 秒没收到有效帧 = MCU 复位
+        if self._last_frame_time > 0 and self.serial_ok:
+            now = self.get_clock().now().nanoseconds / 1e9
+            if now - self._last_frame_time > 3.0:
+                self._mark_reset_detected('MCU heartbeat timeout (no frame for 3s)')
 
     def _mark_reset_detected(self, reason: str):
         if self._reset_detected:
@@ -253,6 +260,7 @@ class SerialBridge(Node):
             self._handle_downlink(cmd, payload)
 
     def _handle_downlink(self, cmd: int, payload: bytes):
+        self._last_frame_time = self.get_clock().now().nanoseconds / 1e9
         if cmd == DownlinkCMD.ACK:
             ack_cmd = payload[0]
             code = payload[1]
