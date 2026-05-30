@@ -229,11 +229,11 @@ class SerialBridge(Node):
                 try:
                     if self.ser.in_waiting:
                         data = self.ser.read(self.ser.in_waiting)
-                        # 扫描 0xAB 三连信号（STM32 启动后通过 rc_send_power_on_msg 发送）
-                        if b'\xab\xab\xab' in data and not self._reset_detected:
-                            self.get_logger().info('收到 MCU 复位信号 0xABx3，系统将重启')
-                            self._mark_reset_detected('Received MCU reset signal 0xABx3; restarting system')
-                            return
+                        # 扫描 0xAB 三连信号（STM32 复位后启动时发送）→ 归零里程计偏移
+                        if b'\xab\xab\xab' in data:
+                            self.get_logger().info('收到 MCU 复位信号 0xABx3，里程计归零')
+                            with self.lock:
+                                self._odom_offset = None  # 下一条里程计将自动成为新零点
                         self.rx_buffer.extend(data)
                         self._parse_rx()
                 except (OSError, serial.SerialException) as exc:
