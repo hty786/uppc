@@ -114,10 +114,11 @@ class SerialBridge(Node):
                 self.ser = _s.Serial(p, self.baudrate, timeout=0.01)
                 self.serial_ok = True
                 self.get_logger().info(f'serial connected: {p}')
-                # 串口断连后重连 = MCU 复位，触发系统重启
-                if self._serial_was_lost and not self._reset_detected:
-                    self.get_logger().info('串口重连，判定 MCU 复位，触发系统重启')
-                    self._mark_reset_detected('MCU reset detected via serial reconnect')
+                # 串口重连 = MCU 复位，归零里程计偏移
+                if self._serial_was_lost:
+                    self.get_logger().info('串口重连，MCU 复位，里程计归零')
+                    with self.lock:
+                        self._odom_offset = None
                 return
             except Exception:
                 continue
@@ -239,6 +240,7 @@ class SerialBridge(Node):
                 except (OSError, serial.SerialException) as exc:
                     self.get_logger().warn(f'serial read error: {exc}')
                     self.serial_ok = False
+                    self._serial_was_lost = True  # I/O 错误也标记为断开
                     time.sleep(1.0)
             else:
                 time.sleep(0.1)
