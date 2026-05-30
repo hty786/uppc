@@ -159,13 +159,21 @@ class SerialBridge(Node):
         pass
 
     def _check_reset(self):
-        """主线程回调：检测到 MCU 复位信号后触发系统重启"""
+        """主线程回调：检测 MCU 复位并归零里程计"""
         if self._reset_detected:
             if self._reset_reason:
                 self.get_logger().info(self._reset_reason)
             self.get_logger().info('MCU 复位，正在重启系统...')
             rclpy.shutdown()
             return
+        # 心跳检测：串口正常但 1s 没收到有效帧 = STM32 复位，归零里程计
+        if self._last_frame_time > 0 and self.serial_ok:
+            now = self.get_clock().now().nanoseconds / 1e9
+            if now - self._last_frame_time > 1.0:
+                self.get_logger().info('心跳超时，MCU 复位，里程计归零')
+                self._last_frame_time = 0.0  # 重置，等新帧更新
+                with self.lock:
+                    self._odom_offset = None
 
     def _mark_reset_detected(self, reason: str):
         if self._reset_detected:
