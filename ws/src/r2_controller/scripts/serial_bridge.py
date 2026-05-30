@@ -49,6 +49,7 @@ class SerialBridge(Node):
         self._reset_detected = False
         self._reset_reason = ''
         self._odom_offset = None  # 首次收到的里程计作为偏移量减掉，实现归零
+        self._serial_was_lost = False  # 串口断开过（用于判断 MCU 复位）
 
         # ROS 订阅
         self.sub_odom = self.create_subscription(
@@ -94,8 +95,9 @@ class SerialBridge(Node):
         if self.ser is not None and self.serial_ok:
             if os.path.exists(self.ser.port):
                 return  # 设备文件还在，正常
-            # 设备文件消失 (USB 断开)
+            # 设备文件消失 (USB 断开) — 说明 MCU 复位了
             self.get_logger().warn(f'serial device {self.ser.port} lost, reconnecting...')
+            self._serial_was_lost = True  # 标记串口断开过
             try:
                 self.ser.close()
             except Exception:
@@ -111,6 +113,10 @@ class SerialBridge(Node):
                 self.ser = _s.Serial(p, self.baudrate, timeout=0.01)
                 self.serial_ok = True
                 self.get_logger().info(f'serial connected: {p}')
+                # 串口断连后重连 = MCU 复位，触发系统重启
+                if self._serial_was_lost and not self._reset_detected:
+                    self.get_logger().info('串口重连，判定 MCU 复位，触发系统重启')
+                    self._mark_reset_detected('MCU reset detected via serial reconnect')
                 return
             except Exception:
                 continue
