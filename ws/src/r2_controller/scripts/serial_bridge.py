@@ -229,7 +229,8 @@ class SerialBridge(Node):
                 try:
                     if self.ser.in_waiting:
                         data = self.ser.read(self.ser.in_waiting)
-                        if len(self.rx_buffer) == 0 and data and data[0] == 0xAB:
+                        # 在数据流中扫描 0xAB 信号（不限于第一位）
+                        if 0xAB in data and not self._reset_detected:
                             self.get_logger().info('收到 MCU 复位信号 0xAB，系统将重启')
                             self._mark_reset_detected('Received MCU reset signal 0xAB; restarting system')
                             return
