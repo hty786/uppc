@@ -42,9 +42,13 @@ void ImuProcess::Reset()
   mean_acc = V3D(0, 0, -1.0);
   mean_gyr = V3D(0, 0, 0);
   angvel_last = Zero3d;
+  acc_s_last = Zero3d;
   imu_need_init = true;
   init_iter_num = 1;
+  last_prop_end_time = 0.0;
+  time_last_scan = 0.0;
   IMUpose.clear();
+  pcl_wait_proc.clear();
   last_imu.reset(new sensor_msgs::msg::Imu());
   cur_pcl_un_.reset(new PointCloudXYZI());
 }
@@ -116,6 +120,9 @@ void ImuProcess::IMU_init(const MeasureGroup &meas, StatesGroup &state_inout, in
     Reset();
     N = 1;
     b_first_frame = false;
+    state_inout.pos_end = Zero3d;
+    state_inout.vel_end = Zero3d;
+    state_inout.rot_end = Eye3d;
     const auto &imu_acc = meas.imu.front()->linear_acceleration;
     const auto &gyr_acc = meas.imu.front()->angular_velocity;
     mean_acc << imu_acc.x, imu_acc.y, imu_acc.z;
@@ -572,6 +579,7 @@ void ImuProcess::Process2(LidarMeasureGroup &lidar_meas, StatesGroup &stat, Poin
     {
       // cov_acc *= pow(G_m_s2 / mean_acc.norm(), 2);
       imu_need_init = false;
+      last_prop_end_time = pcl_end_time;
       RCLCPP_INFO(rclcpp::get_logger(""), "IMU Initials: Gravity: %.4f %.4f %.4f %.4f; acc covarience: "
                "%.8f %.8f %.8f; gry covarience: %.8f %.8f %.8f \n",
                stat.gravity[0], stat.gravity[1], stat.gravity[2], mean_acc.norm(), cov_acc[0], cov_acc[1], cov_acc[2], cov_gyr[0], cov_gyr[1],
