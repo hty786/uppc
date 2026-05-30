@@ -436,16 +436,22 @@ void LIVMapper::handleLIO()
   voxelmap_manager->feats_down_world_ = feats_down_world;
   voxelmap_manager->feats_down_size_ = feats_down_size;
   
-  if (!lidar_map_inited) 
+  if (!lidar_map_inited)
   {
     lidar_map_inited = true;
+    RCLCPP_INFO(this->node->get_logger(), "[DBG] BuildVoxelMap: state pos=(%.3f,%.3f,%.3f) feats=%zu",
+                _state.pos_end(0), _state.pos_end(1), _state.pos_end(2), feats_down_body->points.size());
     voxelmap_manager->BuildVoxelMap();
   }
 
   double t1 = omp_get_wtime();
 
+  RCLCPP_INFO(this->node->get_logger(), "[DBG] Before StateEstimation: pos=(%.3f,%.3f,%.3f)",
+              state_propagat.pos_end(0), state_propagat.pos_end(1), state_propagat.pos_end(2));
   voxelmap_manager->StateEstimation(state_propagat);
   _state = voxelmap_manager->state_;
+  RCLCPP_INFO(this->node->get_logger(), "[DBG] After StateEstimation: pos=(%.3f,%.3f,%.3f)",
+              _state.pos_end(0), _state.pos_end(1), _state.pos_end(2));
   _pv_list = voxelmap_manager->pv_list_;
 
   double t2 = omp_get_wtime();

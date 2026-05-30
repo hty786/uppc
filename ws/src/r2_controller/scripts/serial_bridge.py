@@ -122,6 +122,10 @@ class SerialBridge(Node):
             q = msg.pose.pose.orientation
             self.latest_odom.roll, self.latest_odom.pitch, self.latest_odom.yaw = \
                 self._quat_to_euler(q.x, q.y, q.z, q.w)
+        now = self.get_clock().now().nanoseconds / 1e9
+        if now - getattr(self, '_last_odom_print', 0) > 1.0:
+            self._last_odom_print = now
+            self.get_logger().info(f'[DBG] odom_cb received: x={msg.pose.pose.position.x:.3f} y={msg.pose.pose.position.y:.3f} z={msg.pose.pose.position.z:.3f}')
 
     def kfs_cb(self, msg: String):
         pass

@@ -452,6 +452,9 @@ void ImuProcess::UndistortPcl(LidarMeasureGroup &lidar_meas, StatesGroup &state_
   state_inout.pos_end = pos_imu;
   state_inout.inv_expo_time = tau;
 
+  RCLCPP_INFO(rclcpp::get_logger(""), "[DBG] UndistortPcl forward done: pos=(%.3f,%.3f,%.3f) vel=(%.3f,%.3f,%.3f) dt_all=%.3f",
+              pos_imu(0), pos_imu(1), pos_imu(2), vel_imu(0), vel_imu(1), vel_imu(2), dt_all);
+
   /*** calculated the pos and attitude prediction at the frame-end ***/
   // if (imu_end_time>prop_beg_time)
   // {
