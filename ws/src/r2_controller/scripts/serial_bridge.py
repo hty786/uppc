@@ -51,6 +51,7 @@ class SerialBridge(Node):
         self._odom_offset = None  # 首次收到的里程计作为偏移量减掉，实现归零
         self._serial_was_lost = False  # 串口断开过（用于判断 MCU 复位）
         self._last_frame_time = 0.0     # 最后收到有效帧的时间（心跳检测）
+        self._heartbeat_fired = False  # 心跳归零只触发一次
 
         # ROS 订阅
         self.sub_odom = self.create_subscription(
@@ -117,6 +118,7 @@ class SerialBridge(Node):
                 # 串口重连 = MCU 复位，归零里程计偏移
                 if self._serial_was_lost:
                     self.get_logger().info('串口重连，MCU 复位，里程计归零')
+                    self._heartbeat_fired = True  # 避免心跳重复触发
                     with self.lock:
                         self._odom_offset = None
                 return
@@ -134,6 +136,7 @@ class SerialBridge(Node):
             # 首次收到里程计：记录偏移量，实现位置归零
             if self._odom_offset is None:
                 self._odom_offset = (x, y, z, yaw)
+                self._heartbeat_fired = False  # 归零完成，允许下次复位触发心跳
                 self.get_logger().info(
                     f'里程计归零点: x={x:.3f} y={y:.3f} z={z:.3f} yaw={yaw:.1f}°')
 
@@ -166,12 +169,12 @@ class SerialBridge(Node):
             self.get_logger().info('MCU 复位，正在重启系统...')
             rclpy.shutdown()
             return
-        # 心跳检测：串口正常但 1s 没收到有效帧 = STM32 复位，归零里程计
-        if self._last_frame_time > 0 and self.serial_ok:
+        # 心跳检测：启动后首帧到达前不触发，只触发一次归零
+        if self._last_frame_time > 0 and self.serial_ok and not self._heartbeat_fired:
             now = self.get_clock().now().nanoseconds / 1e9
             if now - self._last_frame_time > 1.0:
                 self.get_logger().info('心跳超时，MCU 复位，里程计归零')
-                self._last_frame_time = 0.0  # 重置，等新帧更新
+                self._heartbeat_fired = True  # 只触发一次
                 with self.lock:
                     self._odom_offset = None
 
@@ -236,8 +239,9 @@ class SerialBridge(Node):
                         # 扫描 0xAB 三连信号（STM32 复位后启动时发送）→ 归零里程计偏移
                         if b'\xab\xab\xab' in data:
                             self.get_logger().info('收到 MCU 复位信号 0xABx3，里程计归零')
+                            self._heartbeat_fired = True
                             with self.lock:
-                                self._odom_offset = None  # 下一条里程计将自动成为新零点
+                                self._odom_offset = None
                         self.rx_buffer.extend(data)
                         self._parse_rx()
                 except (OSError, serial.SerialException) as exc:
