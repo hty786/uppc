@@ -63,4 +63,11 @@ def generate_launch_description():
                                  os.path.join(get_package_share_directory('fast_livo'),
                                               'config', 'camera_mid360.yaml')])
 
-    return LaunchDescription([camera, mid360, fast_livo, serial, kfs, r2_main])
+    pid_plotter = Node(package='r2_controller', executable='pid_plotter.py',
+                       name='pid_plotter', output='screen')
+
+    nav_plotter = Node(package='r2_controller', executable='nav_plotter.py',
+                       name='nav_plotter', output='screen')
+
+    return LaunchDescription([camera, mid360, fast_livo, serial, kfs, r2_main,
+                              pid_plotter, nav_plotter])

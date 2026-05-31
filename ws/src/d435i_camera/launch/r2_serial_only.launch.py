@@ -35,4 +35,11 @@ def generate_launch_description():
     yaw_plotter = Node(package='r2_controller', executable='yaw_plotter.py',
                        name='yaw_plotter', output='screen')
 
-    return LaunchDescription([mid360, fast_livo, serial, r2_main, yaw_plotter])
+    pid_plotter = Node(package='r2_controller', executable='pid_plotter.py',
+                       name='pid_plotter', output='screen')
+
+    nav_plotter = Node(package='r2_controller', executable='nav_plotter.py',
+                       name='nav_plotter', output='screen')
+
+    return LaunchDescription([mid360, fast_livo, serial, r2_main,
+                              yaw_plotter, pid_plotter, nav_plotter])
