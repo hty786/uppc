@@ -43,7 +43,8 @@ mkdir -p "$LOG_DIR"
 restart_count=0
 stop_requested=0
 
-trap 'stop_requested=1' INT TERM
+trap 'stop_requested=1; echo "收到退出信号，清理子进程..."; kill -TERM 0 2>/dev/null' INT TERM
+trap 'echo "脚本退出，清理残留进程..."; kill -TERM 0 2>/dev/null; exit 0' EXIT
 
 while true; do
     if [ $stop_requested -eq 1 ]; then
