@@ -10,6 +10,7 @@ install(PROGRAMS
   scripts/forest_planner.py
   scripts/odometry_printer.py
   scripts/yaw_plotter.py
+  scripts/r2_dashboard.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
