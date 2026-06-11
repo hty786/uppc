@@ -93,6 +93,7 @@ class LowerState(IntEnum):
     DONE = 4
     ERROR = 5
     WAIT_CMD = 6
+    ESTOP_CH6_MAX = 0x08  # 急停 + CH6最大 → 上位机关机
 
 
 @dataclass

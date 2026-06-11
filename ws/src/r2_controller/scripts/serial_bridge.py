@@ -169,14 +169,12 @@ class SerialBridge(Node):
             self.get_logger().info('MCU 复位，正在重启系统...')
             rclpy.shutdown()
             return
-        # 心跳检测：启动后首帧到达前不触发，只触发一次归零
+        # 心跳检测：启动后首帧到达前不触发，只触发一次
         if self._last_frame_time > 0 and self.serial_ok and not self._heartbeat_fired:
             now = self.get_clock().now().nanoseconds / 1e9
             if now - self._last_frame_time > 1.0:
-                self.get_logger().info('心跳超时，MCU 复位，里程计归零')
                 self._heartbeat_fired = True  # 只触发一次
-                with self.lock:
-                    self._odom_offset = None
+                self._mark_reset_detected('心跳超时，检测到MCU复位')
 
     def _mark_reset_detected(self, reason: str):
         if self._reset_detected:
@@ -283,9 +281,15 @@ class SerialBridge(Node):
             self.downlink_queue.append(('REQ', req))
         elif cmd == DownlinkCMD.STATUS:
             state = payload[0]
-            self.get_logger().info(f'STATUS: {LowerState(state).name}')
+            state_name = LowerState(state).name
+            self.get_logger().info(f'STATUS: {state_name}')
             self.pub_lower_state.publish(String(data=str(state)))
             self.downlink_queue.append(('STATUS', state))
+            # 下位机 0x08 (ESTOP_CH6_MAX) → 上位机自动关机
+            if state == LowerState.ESTOP_CH6_MAX:
+                self.get_logger().warn('收到急停关机指令 (0x08)，系统即将关机...')
+                import subprocess
+                subprocess.Popen(['sudo', 'shutdown', '-h', 'now'])
         elif cmd == DownlinkCMD.ZONE_I_INFO:
             n = payload[0]
             infos = []
